@@ -3,3 +3,12 @@ spring:
     url: jdbc:mysql://127.0.0.1:3306/miniboard?useUnicode=true&serverTimezone=Asia/Seoul
     username: root
     password: fpdlswj365
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+
