@@ -13,43 +13,33 @@ import org.springframework.web.bind.annotation.RequestParam;
 import javax.servlet.http.HttpSession;
 import java.util.List;
 
-// HTTP요청을 받아서 응답을 하는 컴포넌트. 스프링 부트가 자동으로 Bean으로 생성한다.
 @Controller
 @RequiredArgsConstructor
 public class BoardController {
     private final BoardService boardService;
 
     // 게시물 목록을 보여준다.
-    // 컨트롤러의 메소드가 리턴하는 문자열은 템플릿 이름이다.
-    // http://localhost:8080/ -----> "list"라는 이름의 템플릿을 사용(forward)하여 화면에 출력.
-    // list를 리턴한다는 것은
-    // classpath:/templates/list.html
     @GetMapping("/")
     public String list(@RequestParam(name="page", defaultValue = "0") int page, HttpSession session, Model model){ // HttpSession, Model은 Spring이 자동으로 넣어준다.
         // 게시물 목록을 읽어온다. 페이징 처리한다.
         LoginInfo loginInfo = (LoginInfo)session.getAttribute("loginInfo");
-        model.addAttribute("loginInfo", loginInfo); // 템플릿에게
+        model.addAttribute("loginInfo", loginInfo);
 
-        long totalCount = boardService.getTotalCount(); // 11
-        List<Board> list = boardService.getBoards(page); // page가 1,2,3,4 ....
-        long pageCount = totalCount / 10; // 1
-        if(totalCount % 10 > 0){ // 나머지가 있을 경우 1page를 추가
+        long totalCount = boardService.getTotalCount();
+        List<Board> list = boardService.getBoards(page);
+        long pageCount = totalCount / 10;
+        if(totalCount % 10 > 0){
             pageCount++;
         }
         int currentPage = page;
-//        System.out.println("totalCount : " + totalCount);
-//        for(Board board : list){
-//            System.out.println(board);
-//        }
+
         model.addAttribute("list", list);
         model.addAttribute("pageCount", pageCount);
         model.addAttribute("currentPage", currentPage);
         return "list";
     }
 
-    // /board?id=3 // 파라미터 id , 파라미터 id의 값은 3
-    // /board?id=2
-    // /board?id=1
+
     @GetMapping("/board")
     public String board(@RequestParam("boardId") int boardId, Model model){
         System.out.println("boardId : " + boardId);
@@ -59,15 +49,11 @@ public class BoardController {
         return "board";
     }
 
-    // 삭제한다. 관리자는 모든 글을 삭제할 수 있다.
-    // 수정한다.
 
     @GetMapping("/writeForm")
     public String writeForm(HttpSession session, Model model){
-        // 로그인한 사용자만 글을 써야한다.
-        // 세션에서 로그인한 정보를 읽어들인다. 로그인을 하지 않았다면 리스트보기로 자동 이동 시킨다.
         LoginInfo loginInfo = (LoginInfo)session.getAttribute("loginInfo");
-        if(loginInfo == null){ // 세션에 로그인 정보가 없으면 /loginform으로 redirect
+        if(loginInfo == null){
             return "redirect:/loginform";
         }
 
@@ -86,14 +72,12 @@ public class BoardController {
         if(loginInfo == null){ // 세션에 로그인 정보가 없으면 /loginform으로 redirect
             return "redirect:/loginform";
         }
-        // 로그인한 사용자만 글을 써야한다.
-        // 세션에서 로그인한 정보를 읽어들인다. 로그인을 하지 않았다면 리스트보기로 자동 이동 시킨다.
-        System.out.println("title : " + title);
-        // 로그인 한 회원 정보 + 제목, 내용을 저장한다.System.out.println("content : " + content);
+
+        // 로그인 한 회원 정보 + 제목, 내용을 저장한다.
 
         boardService.addBoard(loginInfo.getUserId(), title, content);
 
-        return "redirect:/"; // 리스트 보기로 리다이렉트한다.
+        return "redirect:/";
     }
 
     @GetMapping("/delete")
@@ -114,7 +98,7 @@ public class BoardController {
             boardService.deleteBoard(loginInfo.getUserId(), boardId);
         }
 
-        return "redirect:/"; // 리스트 보기로 리다이렉트한다.
+        return "redirect:/";
     }
 
 
@@ -125,7 +109,6 @@ public class BoardController {
         if (loginInfo.getUserId() != board1.getUser().getUserId()) { //세션정보와 게시물의 유저아이디와 다르면 리스트로 리다이렉트
             return "redirect:/";
         }
-        // boardId에 해당하는 정보를 읽어와서 updateform 템플릿에게 전달한다.
         Board board = boardService.getBoard(boardId, false);
         model.addAttribute("board", board);
         model.addAttribute("loginInfo", loginInfo);
@@ -140,13 +123,14 @@ public class BoardController {
     ){
 
         LoginInfo loginInfo = (LoginInfo) session.getAttribute("loginInfo");
-        if (loginInfo == null) { // 세션에 로그인 정보가 없으면 /loginform으로 redirect
+        if (loginInfo == null) {
             return "redirect:/loginform";
         }
 
         Board board = boardService.getBoard(boardId, false);
         if(board.getUser().getUserId() != loginInfo.getUserId()){
-            return "redirect:/board?boardId=" + boardId; // 글보기로 이동한다.
+            return "redirect:/board?boardId=" + boardId; //
+
         }
         // boardId에 해당하는 글의 제목과 내용을 수정한다.
         boardService.updateBoard(boardId, title, content);
